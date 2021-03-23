@@ -6,6 +6,9 @@ package io.flutter.plugins.webviewflutter;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+import android.webkit.ValueCallback;
 import android.hardware.display.DisplayManager;
 import android.os.Build;
 import android.os.Handler;
@@ -23,16 +26,26 @@ import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.platform.PlatformView;
+import net.servicepoort.compaan.portal.FileChooserActivity;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+
+/*
+This implementation overrides the FlutterWebView class from
+the webview_flutter plugin. The changes allow for uploading pictures
+
+Based on https://gist.github.com/tneotia/ccdb84ba66d6863980b9d558fb95312e.
+ */
 public class FlutterWebView implements PlatformView, MethodCallHandler {
   private static final String JS_CHANNEL_NAMES_FIELD = "javascriptChannelNames";
   private final InputAwareWebView webView;
   private final MethodChannel methodChannel;
   private final FlutterWebViewClient flutterWebViewClient;
   private final Handler platformThreadHandler;
+  Context context1;
 
   // Verifies that a url opened by `Window.open` has a secure url.
   private class FlutterWebChromeClient extends WebChromeClient {
@@ -72,6 +85,18 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
 
       return true;
     }
+
+    @Override
+    public boolean onShowFileChooser(
+            WebView webView, ValueCallback<Uri[]> filePathCallback,
+            WebChromeClient.FileChooserParams fileChooserParams) {
+      Intent intent = new Intent(context1, FileChooserActivity.class);
+      FileChooserActivity.getfilePathCallback(filePathCallback);
+      intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+      context1.startActivity(intent);
+
+      return true;
+    }
   }
 
   @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
@@ -94,7 +119,9 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
     // Allow local storage.
     webView.getSettings().setDomStorageEnabled(true);
     webView.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
-
+    context1 = context;
+    webView.getSettings().setAllowContentAccess(true);
+    webView.getSettings().setAllowFileAccess(true);
     // Multi windows is set with FlutterWebChromeClient by default to handle internal bug: b/159892679.
     webView.getSettings().setSupportMultipleWindows(true);
     webView.setWebChromeClient(new FlutterWebChromeClient());
