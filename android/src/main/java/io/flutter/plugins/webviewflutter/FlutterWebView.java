@@ -26,7 +26,7 @@ import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.platform.PlatformView;
-import net.servicepoort.compaan.portal.FileChooserActivity;
+import io.flutter.plugins.webviewflutter.FileChooserActivity;
 
 import java.util.Collections;
 import java.util.List;
@@ -93,6 +93,13 @@ public class FlutterWebView implements PlatformView, MethodCallHandler {
       Intent intent = new Intent(context1, FileChooserActivity.class);
       FileChooserActivity.getfilePathCallback(filePathCallback);
       intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+      String[] mimeTypes =  fileChooserParams.getAcceptTypes();
+
+      if (mimeTypes != null && mimeTypes.length > 0) {
+        intent.putExtra(FileChooserActivity.EXTRA_MIME_TYPE, mimeTypes[0]);
+      }
+
       context1.startActivity(intent);
 
       return true;

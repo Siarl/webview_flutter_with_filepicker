@@ -1,6 +1,51 @@
+# Explanation
+
+Currently, `webview_flutter` does not support uploading files to websites.
+This funcionality [will be added in version 2.0.3](https://github.com/flutter/plugins/pull/3225/files) 
+through the follwing PR: flutter/plugins#3225.
+
+This repo contains a quick fix based on the suggestions in
+[this issue comment](https://github.com/flutter/flutter/issues/27924#issuecomment-783229087) 
+and the following gists:
+- [FlutterWebview.java](https://gist.github.com/tneotia/ccdb84ba66d6863980b9d558fb95312e)
+- [newActivity.java (FilePickerActivity.java)](https://gist.github.com/tneotia/adc61196cfa59a5a7bdef6efb0ab5883)
+
+I modified these files to:
+- use [EasyPermissions](https://github.com/googlesamples/easypermissions)
+- use material theme for dialogs
+- fit my usecase a bit better
+
+For other usecases it might be usefull to clone this and mess with 
+`FilePickerActivity.java`.
+
+Note that this version of `webview_flutter` is based on version 1.0.7, 
+so there are some existing issues fixed in later releases.
+
+I'm not going to maintain this actively and will switch to the official fix 
+once that comes out (and once there are no dependency conflicts).
+
+### How to use
+
+In your `pubspec.yaml`, replace
+
+```yaml
+dependencies:
+  webview_flutter: ^1.0.7
+```
+
+with:
+
+```yaml
+dependencies:
+  webview_flutter:
+    git: git@github.com:Siarl/webview_flutter_with_filepicker.git
+```
+
+---
+
 # WebView for Flutter
 
-A Flutter plugin that provides a WebView widget.
+A Flutter plugin that provides a WebView.
 
 On iOS the WebView widget is backed by a [WKWebView](https://developer.apple.com/documentation/webkit/wkwebview);
 On Android the WebView widget is backed by a [WebView](https://developer.android.com/reference/android/webkit/WebView).

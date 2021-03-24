@@ -1,4 +1,4 @@
-package net.servicepoort.compaan.portal;
+package io.flutter.plugins.webviewflutter;
 
 import android.Manifest;
 import android.app.Activity;
@@ -12,7 +12,6 @@ import android.provider.MediaStore;
 import android.view.WindowManager;
 import android.webkit.ValueCallback;
 import androidx.annotation.NonNull;
-import org.jetbrains.annotations.NotNull;
 import pub.devrel.easypermissions.AppSettingsDialog;
 import pub.devrel.easypermissions.EasyPermissions;
 
@@ -20,6 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import android.util.Log;
 
 /*
  * Used by our version of FlutterWebView.java to assist with file inputs.
@@ -33,8 +33,12 @@ public class FileChooserActivity extends Activity implements EasyPermissions.Per
     private Uri mOutputFileUri;
     private Uri image;
     private Uri outputFileUri;
+    private String mimeType;
 
     private static final int PERMISSION_REQUEST_CODE = 383938;
+    public static final String EXTRA_MIME_TYPE =
+            "io.flutter.plugins.webviewflutter.FileChooserActivity.EXTRA_MIME_TYPE";
+
     private static final String[] REQUIRED_PERMISSIONS = {
             Manifest.permission.CAMERA,
             Manifest.permission.READ_EXTERNAL_STORAGE
@@ -51,6 +55,14 @@ public class FileChooserActivity extends Activity implements EasyPermissions.Per
         overridePendingTransition(0,0);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+
+        if (getIntent().hasExtra(EXTRA_MIME_TYPE)) {
+            mimeType = getIntent().getExtras().getString(EXTRA_MIME_TYPE);
+        }
+
+        if (mimeType == null || mimeType.length() == 0) {
+            mimeType = "*/*";
+        }
 
         requestPermissions();
     }
@@ -89,6 +101,7 @@ public class FileChooserActivity extends Activity implements EasyPermissions.Per
             }
             mUploadMessages.onReceiveValue(results);
             mUploadMessages = null;
+            finish();
         }
     }
 
@@ -112,7 +125,7 @@ public class FileChooserActivity extends Activity implements EasyPermissions.Per
 
         // Filesystem.
         final Intent fileIntent = new Intent();
-        fileIntent.setType("*/*");
+        fileIntent.setType(mimeType);
         fileIntent.setAction(Intent.ACTION_OPEN_DOCUMENT);
         fileIntent.addCategory(Intent.CATEGORY_OPENABLE);
 
@@ -130,12 +143,9 @@ public class FileChooserActivity extends Activity implements EasyPermissions.Per
 
         if (EasyPermissions.hasPermissions(this, REQUIRED_PERMISSIONS)) {
             openImageIntent(true);
-        } else if (EasyPermissions.somePermissionPermanentlyDenied(
-                this, Arrays.asList(REQUIRED_PERMISSIONS))) {
-            new AppSettingsDialog.Builder(this).build().show();
         } else {
             EasyPermissions.requestPermissions(this,
-                    "This app needs access to your camera and files to upload a profile picture.",
+                    "This app needs access to your camera and files to upload them.",
                     PERMISSION_REQUEST_CODE, REQUIRED_PERMISSIONS);
         }
     }
@@ -150,7 +160,7 @@ public class FileChooserActivity extends Activity implements EasyPermissions.Per
 
     @Override
     public void onPermissionsGranted(
-            int requestCode, @NonNull @NotNull List<String> perms) {
+            int requestCode, @NonNull List<String> perms) {
 
         if (perms.contains(Manifest.permission.READ_EXTERNAL_STORAGE)) {
             openImageIntent(perms.contains(Manifest.permission.CAMERA));
@@ -162,7 +172,7 @@ public class FileChooserActivity extends Activity implements EasyPermissions.Per
 
     @Override
     public void onPermissionsDenied(
-            int requestCode, @NonNull @NotNull List<String> perms) {
+            int requestCode, @NonNull List<String> perms) {
         // (Optional) Check whether the user denied any permissions and checked "NEVER ASK AGAIN."
         // This will display a dialog directing them to enable the permission in app settings.
         if (EasyPermissions.somePermissionPermanentlyDenied(this, perms)) {
