@@ -1,8 +1,8 @@
 # Explanation
 
-Currently, `webview_flutter` does not support uploading files to websites.
+Currently, `webview_flutter` does not support uploading files to websites on Android.
 This funcionality [will be added in version 2.0.3](https://github.com/flutter/plugins/pull/3225/files) 
-through the follwing PR: flutter/plugins#3225.
+through the follwing PR: [flutter/plugins#3225](https://github.com/flutter/plugins/pull/3225).
 
 This repo contains a quick fix based on the suggestions in
 [this issue comment](https://github.com/flutter/flutter/issues/27924#issuecomment-783229087) 
