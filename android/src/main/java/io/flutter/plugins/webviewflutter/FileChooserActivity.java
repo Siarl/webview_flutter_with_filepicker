@@ -8,7 +8,10 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Parcelable;
+import android.os.Build;
+import android.os.Environment;
 import android.provider.MediaStore;
+import android.content.pm.PackageManager;
 import android.view.WindowManager;
 import android.webkit.ValueCallback;
 import androidx.annotation.NonNull;
@@ -17,9 +20,14 @@ import pub.devrel.easypermissions.EasyPermissions;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
+import android.widget.Toast;
 import android.util.Log;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 /*
  * Used by our version of FlutterWebView.java to assist with file inputs.
@@ -38,11 +46,6 @@ public class FileChooserActivity extends Activity implements EasyPermissions.Per
     private static final int PERMISSION_REQUEST_CODE = 383938;
     public static final String EXTRA_MIME_TYPE =
             "io.flutter.plugins.webviewflutter.FileChooserActivity.EXTRA_MIME_TYPE";
-
-    private static final String[] REQUIRED_PERMISSIONS = {
-            Manifest.permission.CAMERA,
-            Manifest.permission.READ_EXTERNAL_STORAGE
-    };
 
 
     public static void getfilePathCallback(ValueCallback<Uri[]> filePathCallback){
@@ -141,12 +144,24 @@ public class FileChooserActivity extends Activity implements EasyPermissions.Per
 
     private void requestPermissions() {
 
-        if (EasyPermissions.hasPermissions(this, REQUIRED_PERMISSIONS)) {
+        String[] permissions;
+        if (Build.VERSION.SDK_INT < 33) {
+            permissions = new String[]{
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.CAMERA
+            };
+        } else {
+            permissions = new String[]{
+                    Manifest.permission.CAMERA
+            };
+        }
+
+        if (EasyPermissions.hasPermissions(this, permissions)) {
             openImageIntent(true);
         } else {
             EasyPermissions.requestPermissions(this,
                     "This app needs access to your camera and files to upload them.",
-                    PERMISSION_REQUEST_CODE, REQUIRED_PERMISSIONS);
+                    PERMISSION_REQUEST_CODE, permissions);
         }
     }
 
@@ -161,9 +176,15 @@ public class FileChooserActivity extends Activity implements EasyPermissions.Per
     @Override
     public void onPermissionsGranted(
             int requestCode, @NonNull List<String> perms) {
-
         if (perms.contains(Manifest.permission.READ_EXTERNAL_STORAGE)) {
             openImageIntent(perms.contains(Manifest.permission.CAMERA));
+        } else if (Build.VERSION.SDK_INT >= 33) {
+            if (ContextCompat.checkSelfPermission(this, "android.permission.READ_MEDIA_IMAGES") == PackageManager.PERMISSION_GRANTED) {
+                openImageIntent(perms.contains(Manifest.permission.CAMERA));
+            } else {
+                Toast.makeText(getApplicationContext(), "Allow the Photo permission.", Toast.LENGTH_SHORT).show();
+                ActivityCompat.requestPermissions(this, new String[]{"android.permission.READ_MEDIA_IMAGES"}, 123123);
+            }
         } else {
             finish();
         }
